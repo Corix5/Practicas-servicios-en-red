@@ -141,17 +141,33 @@ def modificar_agente():
             file.write(x)
 
 def eliminar_agente():
+    datos_agente = []
     print('Escriba la ip del agente a eliminar')
-    ipd = input()
+    ipm = input()
 
-    archivo = open('agentes.txt', 'r')
+    with open("agentes.txt") as archivo:
+        for lineas in archivo:
+           datos_agente.extend(lineas.split())
 
-    for x in archivo:
-        xf = x.replace()
+    posicion = datos_agente.index(ipm)
+    puerto = str(datos_agente[posicion+1])
+    comunidad = str(datos_agente[posicion+2])
+
+    with open("agentes.txt", "rt") as file:
+        x = file.read()
+
+    with open("agentes.txt", "wt") as file:
+        x = x.replace(ipm,'')
+        x = x.replace(puerto, '')
+        x = x.replace(comunidad, '')
+        file.write(x)
 
 def generar_reporte():
     from reportlab.lib.pagesizes import letter
     from reportlab.pdfgen import canvas
+
+    print('Escriba la ip del agente a generar reporte')
+    ip_agente = input()
 
     w, h = letter
     c = canvas.Canvas("Reporte.pdf", pagesize=letter)
@@ -163,40 +179,72 @@ def generar_reporte():
         for lineas in archivo:
            datos.extend(lineas.split())
 
-    for n in range(0, len(datos), 3):
-        ip.append(datos[n])
-
-    for i in range(2, len(datos), 3):
-        comunidad.append(datos[i])
-
     numero_agentes = int(len(datos)/3)
     interlineado = 50
-    for k in range(numero_agentes):
-        sistema_operativo = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],"1.3.6.1.2.1.1.1.0"))[0])
-        subcadena1 = 'Windows'
-        subcadena2 = 'Linux'
 
-        if subcadena1 in sistema_operativo:
-            c.drawString(50, h - interlineado, "Sistema: " + subcadena1)
+    indice_ip = datos.index(ip_agente)
+    comunidad = datos[indice_ip + 2]
 
+    sistema_operativo = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.1.1.0"))[0])
+    subcadena1 = 'Windows'
+    subcadena2 = 'Linux'
+
+    if subcadena1 in sistema_operativo:
+        c.drawString(50, h - interlineado, "Sistema: " + subcadena1)
+
+    else:
+        c.drawString(50, h - interlineado, "Sistema: " + subcadena2)
+
+    nombre_dispoitivo = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.1.5.0"))[0])
+    nombre_split = nombre_dispoitivo.split('=')
+    informacion_contacto = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.1.4.0"))[0])
+    info_split = informacion_contacto.split('=')
+    ubicacion = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.1.6.0"))[0])
+    ubicacion_split = ubicacion.split('=')
+    numero_interfaces = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.1.0"))[0])
+    n_int_split = numero_interfaces.split('=')
+    num_int = int(n_int_split[1])
+
+    c.drawString(50, h - (interlineado+20), "Nombre: " + nombre_split[1])
+    c.drawString(50, h - (interlineado+40), "Contacto: " + info_split[1])
+    c.drawString(50, h - (interlineado+60), "Ubicación: " + ubicacion_split[1])
+    c.drawString(50, h - (interlineado+80), "Número de interfaces: " + n_int_split[1])
+
+    aux = 0
+    for i in range(num_int):
+        oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
+        oidDesc_split = oidDesc.split('=')
+        oidStatus = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.2.2.1.8." + str(i + 1)))[0])
+        oidStatus_split = oidStatus.split('=')
+        int_hex_split = oidDesc_split[1].split('0x')
+        byte_array = bytearray.fromhex(int_hex_split[1])
+        int_hex = byte_array.decode()
+
+        espacios = interlineado + 100 + (aux*20)
+
+        if (str(oidStatus_split[1]) == "1"):
+            text = c.beginText(50, h - espacios)
+            text.setFont("Times-Roman", 12)
+            text.textLines(str(int_hex) + " ||| UP")
+            c.drawText(text)
+            aux += 1
+
+        elif (str(oidStatus_split[1]) == "2"):
+            text = c.beginText(50, h - espacios)
+            text.setFont("Times-Roman", 12)
+            text.textLines(str(int_hex) + " ||| DOWN")
+            c.drawText(text)
+            aux += 1
         else:
-            c.drawString(50, h - interlineado, "Sistema: " + subcadena2)
+            text = c.beginText(50, h - espacios)
+            text.setFont("Times-Roman", 10)
+            text.textLines(str(int_hex) + " ||| TESTING")
+            c.drawText(text)
+            aux += 1
 
-        nombre_dispoitivo = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],"1.3.6.1.2.1.1.5.0"))[0])
-        informacion_contacto = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],"1.3.6.1.2.1.1.4.0"))[0])
-        ubicacion = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],"1.3.6.1.2.1.1.6.0"))[0])
-        numero_interfaces = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],"1.3.6.1.2.1.2.1.0"))[0])
-        estado_administrativo = str(imprimirRespuesta(consultaOID(comunidad[k],ip[k],'1.3.6.1.2.1.2.2.1.8.1'))[0])
-
-        c.drawString(50, h - (interlineado+20), "Nombre: " + nombre_dispoitivo)
-        c.drawString(50, h - (interlineado+40), "Contacto: " + informacion_contacto)
-        c.drawString(50, h - (interlineado+60), "Ubicación: " + ubicacion)
-        c.drawString(50, h - (interlineado+80), "Número de interfaces: " + numero_interfaces)
-        c.drawString(50, h - (interlineado+100), "Estado administrativo: " + estado_administrativo)
-
-        nuevo_interlineado = interlineado+140
-        interlineado = nuevo_interlineado
-
+        if espacios % 710 == 0:
+            c.showPage()
+            aux = 0
     c.showPage()
     c.save()
 
