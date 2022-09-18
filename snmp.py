@@ -73,13 +73,6 @@ def menu_principal():
 
     generar_menu(opciones, '5')
 
-def main():
-    comunidad=input()
-    ip=input()
-    OIDS=['1.3.6.1.2.1.2.2.1.12.1', '1.3.6.1.2.1.4.9.0','1.3.6.1.2.1.4.9.0','1.3.6.1.2.1.6.11.0','1.3.6.1.2.1.7.2.0']
-    for oid in OIDS:
-        imprimirRespuesta(consultaOID(comunidad,ip,oid))
-
 def salir():
     print('Saliendo')
 
@@ -90,15 +83,19 @@ def parametros_agente():
     puerto = input()
     print('ingrese comunidad')
     comunidad = input()
-    agregar_agente(ip, puerto, comunidad)
+    print('ingrese versión SNMP')
+    version = input()
+    agregar_agente(ip, puerto, comunidad, version)
 
-def agregar_agente(ip, puerto, comunidad):
+def agregar_agente(ip, puerto, comunidad, version):
     f = open('./agentes.txt', 'a')
     f.write(ip)
     f.write('\n')
     f.write(puerto)
     f.write('\n')
     f.write(comunidad)
+    f.write('\n')
+    f.write(version)
     f.write('\n\n')
     f.close()
 
@@ -112,11 +109,17 @@ def modificar_agente():
            datos_agente.extend(lineas.split())
 
     posicion = datos_agente.index(ipm)
-    comunidad = str(datos_agente[posicion+2])
+    aux = int(posicion/4)
+    print(aux)
+    posicion_comunidad = posicion + aux + 2
+    posicion_version = posicion + aux + 3
+
+
 
     print('¿Qué dato desea modificar?')
     print('1. IP')
     print('2. Comunidad')
+    print('3. Version SNMP')
     opcion = input()
 
     if opcion == '1':
@@ -133,12 +136,22 @@ def modificar_agente():
     elif opcion == '2':
         print('Escriba la nueva comunidad')
         nueva_comunidad = input()
-        with open("agentes.txt", "rt") as file:
-            x = file.read()
+        with open('agentes.txt', 'r', encoding='utf-8') as file:
+            data = file.readlines()
+            print(data)
+        data[posicion_comunidad] = nueva_comunidad + '\n'
+        with open('agentes.txt', 'w', encoding='utf-8') as file:
+            file.writelines(data)
 
-        with open("agentes.txt", "wt") as file:
-            x = x.replace(comunidad, nueva_comunidad)
-            file.write(x)
+    elif opcion == '3':
+        print('Escriba la versión deseada')
+        nueva_version = input()
+        with open('agentes.txt', 'r', encoding='utf-8') as file:
+            data = file.readlines()
+
+        data[posicion_version] = nueva_version + '\n'
+        with open('agentes.txt', 'w', encoding='utf-8') as file:
+            file.writelines(data)
 
 def eliminar_agente():
     datos_agente = []
@@ -150,17 +163,23 @@ def eliminar_agente():
            datos_agente.extend(lineas.split())
 
     posicion = datos_agente.index(ipm)
-    puerto = str(datos_agente[posicion+1])
-    comunidad = str(datos_agente[posicion+2])
+    aux = int(posicion/4)
+    print(aux)
+    posicion_ip = posicion + aux
+    posicion_puerto = posicion + aux + 1
+    posicion_comunidad = posicion + aux + 2
+    posicion_version = posicion + aux + 3
+    posicion_salto = posicion + aux + 4
 
-    with open("agentes.txt", "rt") as file:
-        x = file.read()
-
-    with open("agentes.txt", "wt") as file:
-        x = x.replace(ipm,'')
-        x = x.replace(puerto, '')
-        x = x.replace(comunidad, '')
-        file.write(x)
+    with open('agentes.txt', 'r', encoding='utf-8') as file:
+        data = file.readlines()
+    data[posicion_ip] = ''
+    data[posicion_puerto] = ''
+    data[posicion_comunidad] = ''
+    data[posicion_version] = ''
+    data[posicion_salto] = ''
+    with open('agentes.txt', 'w', encoding='utf-8') as file:
+        file.writelines(data)
 
 def generar_reporte():
     from reportlab.lib.pagesizes import letter
