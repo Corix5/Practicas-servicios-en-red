@@ -114,8 +114,6 @@ def modificar_agente():
     posicion_comunidad = posicion + aux + 2
     posicion_version = posicion + aux + 3
 
-
-
     print('¿Qué dato desea modificar?')
     print('1. IP')
     print('2. Comunidad')
@@ -209,10 +207,20 @@ def generar_reporte():
     subcadena2 = 'Linux'
 
     if subcadena1 in sistema_operativo:
-        c.drawString(50, h - interlineado, "Sistema: " + subcadena1)
+       # c.drawString(50, h - interlineado, "Sistema: " + subcadena1)
+        text = c.beginText(50, h - interlineado + 25)
+        text.setFont("Times-Roman", 12)
+        text.textLines( "Cortés Coria Luis David Práctica 1" + "\n\n" +
+                        "Sistema: " + subcadena1 + "\n")
+        c.drawText(text)
 
     else:
-        c.drawString(50, h - interlineado, "Sistema: " + subcadena2)
+        #c.drawString(50, h - interlineado, "Sistema: " + subcadena2)
+        text = c.beginText(50, h - interlineado + 25)
+        text.setFont("Times-Roman", 12)
+        text.textLines("Cortés Coria Luis David Práctica 1" + "\n\n" +
+                        "Sistema: " + subcadena2 + "\n")
+        c.drawText(text)
 
     nombre_dispoitivo = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.1.5.0"))[0])
     nombre_split = nombre_dispoitivo.split('=')
@@ -224,39 +232,55 @@ def generar_reporte():
     n_int_split = numero_interfaces.split('=')
     num_int = int(n_int_split[1])
 
-    c.drawString(50, h - (interlineado+20), "Nombre: " + nombre_split[1])
-    c.drawString(50, h - (interlineado+40), "Contacto: " + info_split[1])
-    c.drawString(50, h - (interlineado+60), "Ubicación: " + ubicacion_split[1])
-    c.drawString(50, h - (interlineado+80), "Número de interfaces: " + n_int_split[1])
+    text = c.beginText(50, h - interlineado - 15)
+    text.setFont("Times-Roman", 12)
+    text.textLines("Nombre: " + nombre_split[1] + "\n" +
+                   "Contacto: " + info_split[1] + "\n" +
+                   "Ubicación: " + ubicacion_split[1] + "\n" +
+                   "Número de interfaces: " + n_int_split[1] + "\n"
+                   )
+    c.drawText(text)
 
     aux = 0
     for i in range(num_int):
-        oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
-        oidDesc_split = oidDesc.split('=')
-        oidStatus = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.2.2.1.8." + str(i + 1)))[0])
-        oidStatus_split = oidStatus.split('=')
-        int_hex_split = oidDesc_split[1].split('0x')
-        byte_array = bytearray.fromhex(int_hex_split[1])
-        int_hex = byte_array.decode()
+        sistema_operativo = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.1.1.0"))[0])
+        sys1 = 'Windows'
+        sys2 = 'Linux'
 
-        espacios = interlineado + 100 + (aux*20)
+        if sys1 in sistema_operativo:
+            oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
+            oidDesc_split = oidDesc.split('=')
+            oidStatus = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.2.2.1.8." + str(i + 1)))[0])
+            oidStatus_split = oidStatus.split('= ')
+            int_hex_split = oidDesc_split[1].split('0x')
+            byte_array = bytearray.fromhex(int_hex_split[1])
+            int_hex = byte_array.decode()
 
-        if (str(oidStatus_split[1]) == "1"):
-            text = c.beginText(50, h - espacios)
+        else:
+            oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
+            oidDesc_split = oidDesc.split('=')
+            oidStatus = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.2.2.1.8." + str(i + 1)))[0])
+            oidStatus_split = oidStatus.split('= ')
+
+        espacios = interlineado + 60 + (aux*20)
+
+        if (oidStatus_split[1] == '1'):
+            text = c.beginText(50, h - espacios - 20)
             text.setFont("Times-Roman", 12)
             text.textLines(str(int_hex) + " ||| UP")
             c.drawText(text)
             aux += 1
 
-        elif (str(oidStatus_split[1]) == "2"):
-            text = c.beginText(50, h - espacios)
+        elif (oidStatus_split[1] == '2'):
+            text = c.beginText(50, h - espacios - 20)
             text.setFont("Times-Roman", 12)
             text.textLines(str(int_hex) + " ||| DOWN")
             c.drawText(text)
             aux += 1
         else:
-            text = c.beginText(50, h - espacios)
-            text.setFont("Times-Roman", 10)
+            print(oidStatus_split[1])
+            text = c.beginText(50, h - espacios - 20)
+            text.setFont("Times-Roman", 12)
             text.textLines(str(int_hex) + " ||| TESTING")
             c.drawText(text)
             aux += 1
@@ -268,5 +292,4 @@ def generar_reporte():
     c.save()
 
 if __name__ == "__main__":
-    #main()
     menu_principal()
