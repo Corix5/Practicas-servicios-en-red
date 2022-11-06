@@ -63,6 +63,8 @@ def generar_menu(opciones, opcion_salida):
         print()
 
 def menu_principal():
+    print('Cortés Coria Luis David 2020630085')
+    print('Servicios de administración de red\n')
     opciones = {
         '1': ('Agregar agente', parametros_agente),
         '2': ('Modificar agente', modificar_agente),
@@ -242,11 +244,11 @@ def generar_reporte():
     c.drawText(text)
 
     aux = 0
-    for i in range(num_int):
+    for i in range(5):
         sistema_operativo = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.1.1.0"))[0])
         sys1 = 'Windows'
         sys2 = 'Linux'
-
+        espacios = interlineado + 60 + (aux * 20)
         if sys1 in sistema_operativo:
             oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
             oidDesc_split = oidDesc.split('=')
@@ -256,34 +258,53 @@ def generar_reporte():
             byte_array = bytearray.fromhex(int_hex_split[1])
             int_hex = byte_array.decode()
 
+            if (oidStatus_split[1] == '1'):
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(str(int_hex) + " ||| UP")
+                c.drawText(text)
+                aux += 1
+
+            elif (oidStatus_split[1] == '2'):
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(str(int_hex) + " ||| DOWN")
+                c.drawText(text)
+                aux += 1
+            else:
+                print(oidStatus_split[1])
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(str(int_hex) + " ||| TESTING")
+                c.drawText(text)
+                aux += 1
+
         else:
             oidDesc = str(imprimirRespuesta(consultaOID(comunidad,datos[indice_ip],"1.3.6.1.2.1.2.2.1.2." + str(i + 1)))[0])
             oidDesc_split = oidDesc.split('=')
             oidStatus = str(imprimirRespuesta(consultaOID(comunidad, datos[indice_ip], "1.3.6.1.2.1.2.2.1.8." + str(i + 1)))[0])
             oidStatus_split = oidStatus.split('= ')
 
-        espacios = interlineado + 60 + (aux*20)
+            if (oidStatus_split[1] == '1'):
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(oidStatus_split[1] + " ||| UP")
+                c.drawText(text)
+                aux += 1
 
-        if (oidStatus_split[1] == '1'):
-            text = c.beginText(50, h - espacios - 20)
-            text.setFont("Times-Roman", 12)
-            text.textLines(str(int_hex) + " ||| UP")
-            c.drawText(text)
-            aux += 1
-
-        elif (oidStatus_split[1] == '2'):
-            text = c.beginText(50, h - espacios - 20)
-            text.setFont("Times-Roman", 12)
-            text.textLines(str(int_hex) + " ||| DOWN")
-            c.drawText(text)
-            aux += 1
-        else:
-            print(oidStatus_split[1])
-            text = c.beginText(50, h - espacios - 20)
-            text.setFont("Times-Roman", 12)
-            text.textLines(str(int_hex) + " ||| TESTING")
-            c.drawText(text)
-            aux += 1
+            elif (oidStatus_split[1] == '2'):
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(oidStatus_split[1] + " ||| DOWN")
+                c.drawText(text)
+                aux += 1
+            else:
+                print(oidStatus_split[1])
+                text = c.beginText(50, h - espacios - 20)
+                text.setFont("Times-Roman", 12)
+                text.textLines(oidStatus_split[1] + " ||| TESTING")
+                c.drawText(text)
+                aux += 1
 
         if espacios % 710 == 0:
             c.showPage()
